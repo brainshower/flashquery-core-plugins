@@ -1,0 +1,1 @@
+# flashquery-core-plugins

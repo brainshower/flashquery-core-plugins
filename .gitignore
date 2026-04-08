@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Claude Code internals
+.claude/
+# Except for reusable skills (tracked for cross-phase usage)
+!.claude/skills/
+!.claude/skills/**
+
+# GSD worktrees (temporary isolated copies)
+.worktrees/
+
+# Logs
+*.log

@@ -1,0 +1,151 @@
+# ============================================================
+# FlashQuery CRM Plugin — Schema Definition
+# ============================================================
+# The "dissolved CRM" — a complete contact management system
+# with no application. Just data, skills, and your AI.
+#
+# This file defines the four database tables created during
+# plugin initialization. If you want to add columns, rename
+# tables, or change the data model, edit here and re-run
+# "Initialize CRM" to apply the updated schema.
+#
+# Tables, document templates, and memory configuration are
+# defined here. Run "Initialize CRM" in your AI chat to create
+# the infrastructure.
+# ============================================================
+
+id: crm
+name: FlashQuery CRM
+version: "0.1.0"
+description: >
+  A CRM plugin — contact and information management through conversation.
+  Tracks contacts, businesses, interactions, and opportunities
+  using FlashQuery Core's three-layer storage model (documents + records
+  + memories).
+
+tables:
+  - name: contacts
+    description: >
+      Contact records for structured queries. Rich narrative content
+      (email, role, relationship context, interaction history) lives
+      in the linked vault document. The record enables fast lookups
+      by name, status filtering, date-range queries on last_interaction,
+      and tag-based pipeline/relationship categorization.
+    embed_fields:
+      - name
+    columns:
+      - name: name
+        type: text
+        required: true
+        description: "Full name of the contact — primary search and display field"
+      - name: last_interaction
+        type: timestamptz
+        description: "Timestamp of most recent interaction — enables 'who haven't I spoken to in N days?' queries"
+      - name: tags
+        type: text
+        description: "Comma-separated tags for pipeline stage (#stage/qualified), relationship type (#relationship/warm), etc."
+      - name: fqc_id
+        type: uuid
+        description: "UUID linking this record to its vault contact document"
+
+  - name: businesses
+    description: >
+      Business records for structured queries. Company details (domain,
+      industry description, overview) live in the linked vault document.
+      The record enables fast name lookups, status filtering, and
+      tag-based industry/pipeline categorization.
+    embed_fields:
+      - name
+    columns:
+      - name: name
+        type: text
+        required: true
+        description: "Business name — primary search and display field"
+      - name: tags
+        type: text
+        description: "Comma-separated tags for industry (#industry/energy), pipeline stage, etc."
+      - name: fqc_id
+        type: uuid
+        description: "UUID linking this record to its vault company document"
+
+  - name: interactions
+    description: >
+      Interaction records for structured date and relationship queries.
+      The full interaction narrative is appended to the contact's vault
+      document Interaction Timeline section via append_to_doc. The record
+      enables 'all interactions with Sarah', 'interactions this month',
+      and interaction-type filtering via tags.
+    columns:
+      - name: contact_id
+        type: uuid
+        required: true
+        description: "UUID of the contact involved — enables cross-table relationship queries"
+      - name: business_id
+        type: uuid
+        description: "UUID of the business context — enables 'all interactions with Acme Corp' queries"
+      - name: date
+        type: timestamptz
+        required: true
+        description: "When the interaction occurred — enables date-range queries and chronological ordering"
+      - name: tags
+        type: text
+        description: "Comma-separated interaction type tags (#interaction/meeting, #interaction/call, #interaction/email)"
+
+  - name: opportunities
+    description: >
+      Opportunity records for pipeline queries. Opportunity narrative
+      (deal context, negotiation history, stakeholder notes) lives in
+      the associated contact and/or company vault documents in their
+      Opportunities sections. The record enables structured pipeline
+      queries: 'show me all active opportunities', 'what's closing
+      this quarter', and tag-based stage/value filtering.
+    embed_fields:
+      - name
+    columns:
+      - name: name
+        type: text
+        required: true
+        description: "Opportunity or deal name — primary search and display field (e.g., 'Acme Corp Rebrand')"
+      - name: contact_id
+        type: uuid
+        description: "UUID of the primary contact for this opportunity — enables 'all opportunities with Sarah' queries"
+      - name: business_id
+        type: uuid
+        description: "UUID of the associated company — enables 'all opportunities at Acme Corp' queries"
+      - name: close_date
+        type: timestamptz
+        description: >
+          Expected close date — enables 'what's closing this quarter?' and date-range pipeline queries.
+          Convention for imprecise dates: store at the start of the stated period. 'April 2026' becomes
+          2026-04-01T00:00:00Z. 'Q3 2026' becomes 2026-07-01T00:00:00Z. '2027' becomes 2027-01-01T00:00:00Z.
+          The full-precision date lives in the opportunity narrative in the associated vault document.
+      - name: tags
+        type: text
+        description: "Comma-separated tags for pipeline stage (#stage/proposal), value tier (#value/high), deal type, etc."
+
+# ============================================================
+# Memory Configuration
+# ============================================================
+# Memories are the AI-only layer: impressions, preferences, and
+# ambient intelligence that surface at the right moment. Factual
+# information about entities belongs in documents, not memories.
+# ============================================================
+
+memory:
+  scope: plugin
+  categories:
+    - name: plugin_preferences
+      description: >
+        User preferences related to the CRM plugin operation itself for future reference during ongoing usage.
+    - name: communication_preferences
+      description: >
+        How contacts prefer to be reached, response patterns,
+        best times to call, preferred communication channels.
+    - name: relationship_context
+      description: >
+        Relationship dynamics, rapport notes, sensitivities,
+        shared personal details that should not live in a document, communication style observations.
+    - name: deal_context
+      description: >
+        Pricing discussions, negotiation positions, budget signals,
+        competitive mentions, timeline pressures, decision criteria.

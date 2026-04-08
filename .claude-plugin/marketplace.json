@@ -1,0 +1,23 @@
+{
+  "name": "flashquery-core-plugins",
+  "owner": {
+    "name": "FlashQuery",
+    "email": "matt@flashquery.ai"
+  },
+  "metadata": {
+    "description": "Official plugins for FlashQuery Core to power by your AI and your data sovereignty."
+  },
+  "plugins": [
+    {
+      "name": "fqc-crm",
+      "description": "A CRM powered by FlashQuery Core \u2014 contact management through conversation, not application.",
+      "version": "1.4.0",
+      "source": "./flashquery-core/plugins/fqc-crm"
+    },
+    {
+      "name": "fqc-base",
+      "description": "Base set of skills that allow for FlashQuery Core file and memory manipulation.",
+      "source": "./flashquery-core/plugins/fqc-base"
+    }
+  ]
+}

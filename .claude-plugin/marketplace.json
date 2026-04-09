@@ -16,6 +16,7 @@
     },
     {
       "name": "fqc-base",
+      "version": "1.0.0",
       "description": "Base set of skills that allow for FlashQuery Core file and memory manipulation.",
       "source": "./core/fqc-base"
     }

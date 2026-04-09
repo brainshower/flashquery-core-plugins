@@ -69,7 +69,7 @@ Call `create_document` with:
   <!-- Each interaction is logged here as a new entry, appended chronologically -->
   ```
 
-- `tags`: `["#status/active"]` plus any relevant additional tags (e.g., `#stage/qualified`, `#relationship/warm`)
+- `tags`: any relevant tags for categorization (e.g., `#stage/qualified`, `#relationship/warm`). Do not include status tags — those are managed by the system.
 
 ### 2. Parse the fqc_id from the response
 

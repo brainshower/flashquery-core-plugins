@@ -66,7 +66,7 @@ Call `create_document` with:
   <!-- Market intelligence, relationship history, and other context -->
   ```
 
-- `tags`: `["#status/active"]` plus an industry tag if applicable (e.g., `#industry/energy`, `#industry/saas`, `#industry/healthcare`)
+- Industry tag if applicable (e.g., `#industry/energy`, `#industry/saas`, `#industry/healthcare`).  Do not include status tags — those are managed by the system.
 
 ### 2. Parse the fqc_id from the response
 
@@ -87,7 +87,7 @@ Call `create_record` with:
   {
     "name": "<business name>",
     "fqc_id": "<the UUID you parsed from step 2>",
-    "tags": "<comma-separated tags, e.g. '#industry/energy,#status/active'>"
+    "tags": "<comma-separated tags, e.g. '#industry/energy'>"
   }
   ```
 - `plugin_instance`: pass through if the user's CRM is using a non-default instance name

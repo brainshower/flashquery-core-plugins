@@ -75,8 +75,7 @@ Call `archive_record` with:
 
 Call `apply_tags` with:
 - `identifiers`: array containing the entity's document path or fqc_id (e.g., `["CRM/Acme Corp.md"]`)
-- `add_tags`: `["#status/archived"]`
-- `remove_tags`: `["#status/active"]` plus any `#stage/` tags (archived entities are no longer in the pipeline)
+- `remove_tags`:  `#stage/` tags (archived entities are no longer in the pipeline)
 
 ### 6. Archive related opportunities (if applicable)
 

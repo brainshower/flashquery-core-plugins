@@ -62,7 +62,6 @@ Note the **contact record ID**. If not found, suggest creating the contact with 
 Consult `references/tags.md` for the native tag vocabulary. Apply tags based on the user's description:
 
 - **Pipeline stage** — if the user described the stage (e.g., "we're pitching them" → `#stage/proposal`), apply it. If no stage was mentioned, default to `#stage/prospect`.
-- **Status** — `#status/active` (always applied on creation)
 - **Additional tags** — any other relevant tags from the user's description (e.g., value tier, deal type)
 
 ### 3. Convert close_date

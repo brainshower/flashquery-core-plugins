@@ -11,7 +11,7 @@
     {
       "name": "fqc-crm",
       "description": "A CRM powered by FlashQuery Core contact management through conversation, not application.",
-      "version": "1.4.0",
+      "version": "1.5.0",
       "source": "./apps/fqc-crm"
     },
     {

@@ -124,9 +124,11 @@ installation. No content edits needed unless the skill internally references its
 **MCP adaptation**: If the user has an existing `.mcp.json`, copy it to the plugin root.
 Replace any hardcoded absolute paths with `${CLAUDE_PLUGIN_ROOT}/...`.
 
-### Phase 4 — Validate
+### Phase 4 — Validate and Lint
 
-Before packaging, do a structure check:
+Do a comprehensive structure check, then lint skills for common issues.
+
+**Structure validation:**
 
 ```bash
 # Confirm required files exist
@@ -142,35 +144,106 @@ for d in <plugin-dir>/skills/*/; do ls "$d/SKILL.md"; done
 python3 -c "import json; json.load(open('<plugin-dir>/.claude-plugin/plugin.json'))"
 ```
 
-Fix any errors before proceeding.
+**Skill linting:**
+
+After structure validation passes, lint each skill file using Python:
+
+```python
+import os
+import re
+
+PLUGIN_DIR = "<plugin-dir>"
+LINTS = []
+
+# Check 1: #status tag misuse (should use "status" frontmatter property instead)
+skills_dir = os.path.join(PLUGIN_DIR, "skills")
+if os.path.exists(skills_dir):
+    for skill_name in os.listdir(skills_dir):
+        skill_path = os.path.join(skills_dir, skill_name, "SKILL.md")
+        if os.path.exists(skill_path):
+            with open(skill_path) as f:
+                content = f.read()
+            
+            # Look for #status tag usage in the body (after frontmatter)
+            # Pattern: find #status/ tags anywhere in the skill content
+            if re.search(r'#status/\w+', content):
+                LINTS.append({
+                    "skill": skill_name,
+                    "issue": "#status tag found",
+                    "details": "Skills should not use #status tags. Use the 'status' frontmatter property instead to set document status (e.g., status: draft)",
+                    "severity": "warning"
+                })
+
+# Report linting results
+if LINTS:
+    print("⚠️ LINTING WARNINGS:\n")
+    for lint in LINTS:
+        print(f"  {lint['skill']}: {lint['issue']}")
+        print(f"    → {lint['details']}\n")
+else:
+    print("✓ All linting checks passed.")
+```
+
+Fix any warnings or errors before proceeding. Warnings may be ignored with user confirmation, but errors must be fixed.
 
 ### Phase 5 — Package and deliver
 
-Create the `.plugin` file and copy the plugin folder to the output directory.
+Create the `.plugin` file and copy the plugin folder to the output directory using the built-in packager.
 
-**Output directory**: Default to `flashquery-core/flashquery-core/plugins/` inside the
-user's workspace folder. Resolve the actual absolute path at runtime by locating the
-workspace mount. If the path is ambiguous or doesn't exist, ask before writing.
+**Output directory**: Default to `flashquery-core/plugins/` inside the user's workspace folder (under flashquery-core-plugins). Resolve the actual absolute path at runtime. If the path is ambiguous or doesn't exist, ask before writing.
 
 Both outputs go into this directory:
 - `<plugin-name>.plugin` — the installable zip archive
 - `<plugin-name>/` — the unpacked plugin folder (used by the marketplace manifest as the source)
 
-```bash
-# Always build in /tmp/ first, then copy — direct writes to outputs may fail
-PLUGIN_NAME="<plugin-name>"
-PLUGIN_DIR="/tmp/${PLUGIN_NAME}"
-OUTPUT_DIR="<workspace>/flashquery-core/flashquery-core/plugins"  # resolve actual path at runtime
+**Integrated Python packager** (no external build script needed):
 
-# Package
-cd /tmp && zip -r "/tmp/${PLUGIN_NAME}.plugin" "${PLUGIN_NAME}/" -x "*.DS_Store" -x "*/__pycache__/*" -x "*/evals/*"
+```python
+import os
+import json
+import zipfile
+import shutil
 
-# Copy both the .plugin file and the folder to the output directory
-# Remove any existing folder first so an update is a clean replace, not a merge
-cp "/tmp/${PLUGIN_NAME}.plugin" "${OUTPUT_DIR}/${PLUGIN_NAME}.plugin"
-rm -rf "${OUTPUT_DIR}/${PLUGIN_NAME}"
-cp -r "/tmp/${PLUGIN_NAME}" "${OUTPUT_DIR}/${PLUGIN_NAME}"
+PLUGIN_NAME = "<plugin-name>"
+PLUGIN_DIR = os.path.join(os.getcwd(), "<plugin-relative-path>", PLUGIN_NAME)
+OUTPUT_DIR = os.path.join(os.getcwd(), "<output-dir>")  # resolve at runtime
+OUTPUT_PATH = os.path.join(OUTPUT_DIR, f"{PLUGIN_NAME}.plugin")
+
+# Validate before building
+manifest_path = os.path.join(PLUGIN_DIR, ".claude-plugin", "plugin.json")
+if not os.path.exists(manifest_path):
+    raise FileNotFoundError(f"Missing {manifest_path}")
+
+with open(manifest_path) as f:
+    manifest = json.load(f)
+    if not all(k in manifest for k in ["name", "version", "description"]):
+        raise ValueError("plugin.json missing required fields")
+
+# Package: create .plugin file (zip)
+with zipfile.ZipFile(OUTPUT_PATH, "w", zipfile.ZIP_DEFLATED) as zf:
+    for root, dirs, files in os.walk(PLUGIN_DIR):
+        # Skip excluded patterns
+        dirs[:] = [d for d in dirs if d not in ["__pycache__", "evals", ".DS_Store"]]
+        for file in files:
+            if file == ".DS_Store":
+                continue
+            filepath = os.path.join(root, file)
+            # Archive name: relative to parent of PLUGIN_DIR
+            arcname = os.path.relpath(filepath, os.path.dirname(PLUGIN_DIR))
+            zf.write(filepath, arcname)
+
+print(f"✓ {PLUGIN_NAME}.plugin created ({os.path.getsize(OUTPUT_PATH) / 1024:.1f} KB)")
+
+# Copy plugin folder to output (clean replace, not merge)
+output_folder = os.path.join(OUTPUT_DIR, PLUGIN_NAME)
+if os.path.exists(output_folder):
+    shutil.rmtree(output_folder)
+shutil.copytree(PLUGIN_DIR, output_folder)
+
+print(f"✓ {PLUGIN_NAME}/ folder copied to output")
 ```
+
+This packager is built directly into the workflow — no external `build_plugin.py` script needed. Both the `.plugin` file and folder are ready for distribution or marketplace integration.
 
 ### Phase 6 — Sync versions and update the marketplace manifest
 
@@ -228,6 +301,27 @@ If any version differs, fix it before delivering.
 
 After all three steps are complete, present the `.plugin` file with a `computer://`
 link and give the user a brief summary of what's inside and what changed.
+
+---
+
+## Linting Rules
+
+The plugin-creator automatically lints all skills during Phase 4 validation. These checks catch common issues early:
+
+### Rule: No #status tags in skill instructions
+
+**What it checks**: Skills should never use `#status/` tags in their instructions or guidance. The `status` property is a frontmatter field for markdown documents, not a tag.
+
+**Why**: Tags are user-facing organizational vocabulary. System properties like document status belong in frontmatter, not in tags. Mixing them confuses the distinction between user-managed tags and system properties.
+
+**What to fix**: If a skill mentions "#status/draft" or similar, replace it with guidance to use the frontmatter `status: draft` property instead. Example:
+
+❌ Bad: "Tag the document with #status/draft to mark it as incomplete"
+✓ Good: "Set the frontmatter status field to 'draft' to mark it as incomplete"
+
+**Trigger**: The linter searches all skill SKILL.md files for the pattern `#status/` anywhere in the content (excluding the skill metadata frontmatter itself — that's fine).
+
+More linting rules may be added in future versions. The linter is extensible and designed to grow as plugin patterns mature.
 
 ---
 

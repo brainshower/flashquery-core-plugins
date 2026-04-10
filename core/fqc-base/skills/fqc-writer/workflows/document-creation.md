@@ -78,9 +78,9 @@ Suggest tags based on the document's type and context. Common patterns:
 | Deliverables  | `#type/deliverable`, `#project/{name}`, `#status/draft` |
 | Reference     | `#type/reference` |
 
-- `#status/active` is automatically prepended by `create_document` — don't include it in your tags list.
-- Use `#status/draft` if the content is incomplete.
 - Tag namespace is `#category/value` — lowercase, no spaces.
+- Do not include `#status` in your tags list unless directed to by the user (we already have a status property in the frontmatter)
+- Do not include tags concerning the directory, path or filename of the document.
 - Avoid over-tagging: 2–4 tags is usually right.
 
 ---

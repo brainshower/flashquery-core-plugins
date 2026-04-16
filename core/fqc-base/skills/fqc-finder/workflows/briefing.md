@@ -15,11 +15,20 @@ Use this workflow when the user wants a structured overview of a topic, project,
 ```
 get_briefing(
   tags: ["#client/acme"],      // required — scope by tags
-  tag_match: "any",            // or "all" if the topic requires all tags
+  tag_match: "any",            // optional; defaults to "any". Pass "all" to require every tag.
   limit: 20,                   // per section; default is 20
   plugin_id: "crm"             // optional — include plugin records
 )
 ```
+
+The common case — any of the listed tags matching — can omit `tag_match` entirely:
+
+```
+get_briefing(tags: ["#client/acme"])            // tag_match defaults to "any"
+get_briefing(tags: ["#client/acme", "#type/proposal"], tag_match: "all")   // must have both
+```
+
+**Plugin records are not filtered by `tags`.** When `plugin_id` is provided, the tool pulls all active records from that plugin's tables regardless of the tag criteria — the `tags` filter only narrows the Documents and Memories sections of the response. Tell the user if it matters for their question.
 
 ## Steps
 

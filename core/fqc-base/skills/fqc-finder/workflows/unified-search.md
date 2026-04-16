@@ -17,10 +17,21 @@ Use this workflow when the user is looking for information without specifying wh
 search_all(
   query: "the user's topic",
   tags: [...],      // optional — narrow by tag if context makes it clear
+  tag_match: "any", // optional; defaults to "any". Pass "all" to require every tag on each hit.
   limit: 10,        // per entity type; increase if you expect many results
   entity_types: ["documents", "memories"]   // default; both types
 )
 ```
+
+**`tag_match` example — require every tag:**
+```
+search_all(
+  query: "pricing discussion",
+  tags: ["#client/acme", "#type/meeting-notes"],
+  tag_match: "all"
+)
+```
+Use `"all"` when the user's intent is an intersection ("meeting notes with Acme that are about pricing"). Default `"any"` is usually right for broad exploratory queries.
 
 ## Steps
 

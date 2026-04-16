@@ -33,12 +33,20 @@ This step is especially important for archive operations — archiving is not ea
 >
 > Archiving will hide these from search results. Files stay on disk. Proceed?"
 
-### 3. Execute: `archive_document` (batch-capable)
+### 3. Execute: `archive_document` (batch- or single-capable)
+
+`identifiers` accepts either an array (batch) or a single string (one document). Bulk sweeps use the array form:
 
 ```
 archive_document(
   identifiers: ["clients/acme/pricing-old.md", "research/old-site-arch.md", ...]
 )
+```
+
+The single-identifier form is also valid — useful for a confirmed one-off inside a larger organizing session:
+
+```
+archive_document(identifiers: "clients/acme/pricing-old.md")
 ```
 
 Response: one line per document (`{path}: archived`) or error lines for failures.

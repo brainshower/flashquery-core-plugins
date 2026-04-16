@@ -77,3 +77,19 @@ To batch-check metadata on multiple results (no file reads — efficient):
 ```
 get_doc_outline(identifiers: ["path1.md", "path2.md", "path3.md"])
 ```
+
+### `get_doc_outline` optional parameters
+
+- `max_depth` (integer, optional) — cap the heading levels returned when inspecting a single document. Effective values are **1–5**: pass `max_depth: 2` to return only H1s and H2s, for example. Omit (or pass `6`) to include every level — the underlying filter is a no-op at 6, so "unlimited" is the default.
+- `exclude_headings` (boolean, optional, default `false`) — when `true`, return frontmatter + outbound links only and skip the heading tree entirely. Useful when you just need the fqc_id, tags, or link graph.
+
+**Mode note:** `exclude_headings` only applies when `identifiers` is a single string (full-file outline). When `identifiers` is an array, the tool runs in batch DB mode and **never** returns headings regardless of the flag — that mode is intentionally metadata-only.
+
+### Token-efficient triage pattern
+
+- **Batch metadata scan** — pass `identifiers` as an array to get fqc_ids, tags, titles, and link graph for many files in one call. Headings are never returned in this mode, so no need to set `exclude_headings`.
+- **Single-document structure inspection** — pass a single string identifier and, if you only care about the top of the outline, set `max_depth: 2` or `max_depth: 3` to keep the response compact.
+
+## When search returns unexpectedly empty
+
+If the user just added or moved files outside the chat and search returns nothing you'd expect to see, the scanner may not have picked them up yet. Run `force_file_scan()` to reindex, then retry the search. Pass `background: true` for fire-and-forget if the user doesn't need to see the scan results inline. See the vault-maintenance workflow in fqc-organizer for the full scan behavior.

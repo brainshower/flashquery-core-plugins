@@ -52,3 +52,21 @@ Report how many documents were updated, which (if any) failed, and example final
 ## Status tag handling
 
 Only one `#status/*` tag is allowed per document. To change status, include the old status in `remove_tags` and the new one in `add_tags` in the same call.
+
+---
+
+## Tagging a memory
+
+`apply_tags` also accepts a single `memory_id` (UUID string) instead of `identifiers`. The add/remove semantics are identical, but only one memory can be tagged per call — there is no batch form for memories.
+
+```
+apply_tags(
+  memory_id: "c3d4e5f6-a7b8-9012-cdef-123456789012",
+  add_tags: ["#client/acme"],
+  remove_tags: ["#draft"]
+)
+```
+
+**Validation behavior:** The tool requires at least one of `identifiers` or `memory_id`. Passing neither returns: `"Error: At least one of identifiers or memory_id must be provided."` The two parameters are conceptually mutually exclusive but not schema-enforced — if both are passed, the `identifiers` branch runs first and `memory_id` is silently ignored. Choose one per call.
+
+When to reach for the memory form: a user says "tag that memory about Acme's budget as `#client/acme`" — find the memory via `search_memory` or `list_memories`, then apply tags to its ID. For bulk memory retagging across many IDs, loop the call (one per memory).

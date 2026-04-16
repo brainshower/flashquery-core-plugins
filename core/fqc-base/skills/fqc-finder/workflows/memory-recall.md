@@ -28,8 +28,19 @@ Does the user need the full content of a specific memory?
 search_memory(
   query: "Acme communication preferences",
   tags: [...],        // optional; narrow by tag if appropriate
+  tag_match: "any",   // optional; defaults to "any". Pass "all" to require every tag.
   limit: 10,
   threshold: 0.7      // default; lower to 0.5 for broader results
+)
+```
+
+Tag intersection is genuinely useful for memory recall because memories are often multi-tagged (`#client/acme` + `#topic/pricing`, for example). Pass `tag_match: "all"` when the user's question sits at the overlap of two or more topics:
+
+```
+search_memory(
+  query: "pricing conversations",
+  tags: ["#client/acme", "#topic/pricing"],
+  tag_match: "all"
 )
 ```
 

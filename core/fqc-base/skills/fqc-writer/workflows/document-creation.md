@@ -23,6 +23,7 @@ Does the user want to link this doc to an existing one?
    - `content` — the markdown body; write it fully before calling
    - `path` — optional; infer from context (e.g., `"clients/acme/notes.md"`) or omit to place at vault root
    - `tags` — infer appropriate tags from context (see Tag conventions below)
+   - `frontmatter` — optional object of additional frontmatter fields merged in at creation time. Use this to set custom fields (e.g., `client`, `project`, `priority`) without a follow-up `update_doc_header` call. Reserved keys `fqc_id`, `status`, `created`, and `fqc_instance` are managed by FlashQuery Core and cannot be overridden — any value supplied for them is ignored.
 
 2. Parse the `fqc_id` from the response:
    ```
@@ -95,3 +96,14 @@ Suggest tags based on the document's type and context. Common patterns:
 
 **"Create a proposal draft for Acme's AI integration project"**
 → `create_document` (title: "Acme AI Integration Proposal", path: "clients/acme/proposal.md", tags: `["#type/proposal", "#client/acme", "#status/draft"]`)
+
+**"Start a proposal for Acme and mark it high priority with a due date"** — use `frontmatter` to set custom fields up front instead of a follow-up `update_doc_header`:
+```
+create_document(
+  title: "Acme Proposal",
+  path: "clients/acme/proposal.md",
+  content: "...",
+  tags: ["#type/proposal", "#client/acme"],
+  frontmatter: { client: "Acme", priority: "high", "due-date": "2026-05-01" }
+)
+```

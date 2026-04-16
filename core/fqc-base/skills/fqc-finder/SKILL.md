@@ -10,11 +10,13 @@ This skill orchestrates FlashQuery Core's search and retrieval tools. Its job is
 ## What this skill owns
 
 - Searching and browsing vault documents
+- Browsing the vault by folder path and recency (filesystem-shaped navigation)
 - Recalling memories (semantic search, tag-filtered browsing)
 - Cross-entity search (documents + memories in one call)
 - Getting briefings and overviews on a topic
-- Querying plugin records
 - Following up on search results with full content retrieval
+
+Plugin record search is intentionally **not** part of fqc-base — plugin-specific skills (e.g., `fqc-crm`) own the schema context needed to interpret records correctly. If the user is asking about structured plugin data and a plugin skill is available, route there.
 
 ## Routing heuristic
 
@@ -24,10 +26,10 @@ Read the user's intent and route to the appropriate workflow:
 |-------------|----------|
 | "What do we know about X?" — don't know if docs or memories | → [Unified Search](workflows/unified-search.md) |
 | "Find documents about X" or "show me my notes on X" | → [Document Search](workflows/document-search.md) |
+| "What's in this folder?" / "what changed in the last week?" | → [File Browse](workflows/file-browse.md) |
 | "What did I save/remember about X?" | → [Memory Recall](workflows/memory-recall.md) |
 | "Give me a briefing on X" / "overview of project X" | → [Briefing](workflows/briefing.md) |
-| "Find contacts/records that match X" (plugin records) | → [Record Search](workflows/record-search.md) |
-| "Show me everything from last week" / "what's recent?" | → [Document Search](workflows/document-search.md) (filesystem mode, no filters) |
+| "Show me everything from last week" / "what's recent?" | → [File Browse](workflows/file-browse.md) (or [Document Search](workflows/document-search.md) in filesystem mode) |
 
 When uncertain, default to [Unified Search](workflows/unified-search.md) — it covers both documents and memories in one call.
 
@@ -44,4 +46,5 @@ Don't just dump search results. After retrieving content:
 
 - **Semantic search unavailable** — if `search_memory` or `search_all` returns an embedding error, fall back to `list_memories` with tag filters for memories and `search_documents` in filesystem mode for documents.
 - **Ambiguous filename** — if a document tool returns an ambiguity error, use the full path or fqc_id instead.
-- **No results** — let the user know nothing was found and offer to broaden the search or try different terms.
+- **No results when the user just added or moved files** — run `force_file_scan()` to reindex and retry. If they moved files in a way that left stale paths in the database, hand off to fqc-organizer's [vault-maintenance](../fqc-organizer/workflows/vault-maintenance.md) workflow for a full scan + reconciliation pass.
+- **No results otherwise** — let the user know nothing was found and offer to broaden the search or try different terms.

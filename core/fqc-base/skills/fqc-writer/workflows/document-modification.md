@@ -106,7 +106,17 @@ The tool resolves both identifiers and adds a `[[Target Title]]` wikilink to the
 Use when the user wants to retire one or more documents. Archived documents are excluded from search results but remain on disk.
 
 1. Call `archive_document`:
-   - `identifiers` — a single identifier or an array for batch archiving
+   - `identifiers` — accepts a single string identifier or an array. In the writer workflow you're almost always archiving one document at a time, so pass a single string.
+
+Single-document form (the common case here):
+```
+archive_document(identifiers: "clients/acme/pricing-old.md")
+```
+
+Batch form (used from fqc-organizer sweeps, shown for completeness):
+```
+archive_document(identifiers: ["path1.md", "path2.md"])
+```
 
 The tool updates both the vault frontmatter and the database. It's idempotent — archiving an already-archived document is safe. For large-scale archive sweeps based on search criteria, use fqc-organizer.
 

@@ -1,3 +1,7 @@
+---
+version: 1.0.0
+---
+
 # fqc-base
 
 Core FlashQuery skills for writing, finding, and organizing vault documents and memories, plus vault maintenance slash commands.

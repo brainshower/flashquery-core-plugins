@@ -59,7 +59,7 @@ Note the **contact record ID**. If not found, suggest creating the contact with 
 
 ### 2. Determine tags
 
-Consult `references/tags.md` for the native tag vocabulary. Apply tags based on the user's description:
+Read the tag vocabulary by calling `get_document` with the path to `references/tags.md` (relative to the plugin root — two levels up from this SKILL.md). This ensures you're using the current tag vocabulary, including any user-defined tags added since the plugin was installed. Apply tags based on the user's description:
 
 - **Pipeline stage** — if the user described the stage (e.g., "we're pitching them" → `#stage/proposal`), apply it. If no stage was mentioned, default to `#stage/prospect`.
 - **Additional tags** — any other relevant tags from the user's description (e.g., value tier, deal type)

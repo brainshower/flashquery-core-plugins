@@ -84,3 +84,47 @@ This plugin follows the five FQC plugin design principles:
 - **P-03: Wikilinks for Relationships** — Cross-entity associations use `[[wikilinks]]` in vault documents, not columns or tags.
 - **P-04: Document Cognitive Load Test** — Templates pass the 30-second scan test. Lean sections, HTML comment guidance.
 - **P-05: Three-Layer Routing Test** — Every attribute is routed to the right layer: document (human-readable), record (AI-queryable), or memory (AI-only).
+
+## Callback Handlers
+
+Three system-level handlers manage vault changes that happen outside skill invocations. Callback specifications are in `references/callbacks/`.
+
+| Callback | Status | Purpose |
+|----------|--------|---------|
+| `on_document_discovered` | Stub | Routes new vault documents to the CRM, auto-registers templates |
+| `on_document_changed` | Stub | Syncs database when files are edited externally (tags, title, status) |
+| `on_document_deleted` | Stub | Soft-deletes database records, handles relationship orphans |
+
+Callbacks currently return no-op responses. See Roadmap below for the full implementation plan.
+
+## Roadmap
+
+Items below are tracked for future development. They are listed roughly in priority order.
+
+### Full callback implementations
+
+The three callback stubs in `references/callbacks/` need to be completed. `on_document_discovered` should route new CRM folder documents to the database and auto-register custom templates. `on_document_changed` should sync tags, titles, and status between vault frontmatter and database records. `on_document_deleted` should archive the corresponding plugin record and handle interaction/opportunity orphans gracefully. All three must be idempotent — skills already write to plugin tables directly, so the callback re-applying the same state should be harmless.
+
+### Menu skill
+
+A contextual directory skill that surfaces what the CRM can do and reflects current state: contact count, pipeline snapshot, recent interaction activity, stale follow-ups. Should be the first suggested next step after initialization.
+
+### Template registry and migration
+
+Move templates from `templates/` to `_plugin/templates/`. Add a template registry table (like Product Brain's `prodbrain_templates`) so skills look up template content at runtime via `search_records` instead of inlining it. This enables user-customized templates that all skills automatically pick up. Depends on full callback implementation for auto-registration via `on_document_discovered`.
+
+### Two write paths documentation
+
+Document clearly that two paths write to CRM tables: skills write directly as part of execution, and callbacks handle documents that arrive outside skill invocations (e.g., created manually in Obsidian). Both paths target the same tables. This should be documented in skill files and in this README once callbacks are fully implemented.
+
+### Tools Not Used documentation
+
+Add a section to each skill documenting which FlashQuery Core tools were considered but deliberately excluded, and why. This proves the tools audit was done and helps future developers verify whether a tool they're considering has already been evaluated.
+
+### Plugin self-improvement folder
+
+Add a `_plugin/feedback/` folder for capturing friction observations during plugin use. This follows the general convention described in the Plugin Building Considerations document — observations collected here inform deliberate plugin improvements rather than ad-hoc fixes.
+
+### Additional tool adoption
+
+Tools that could improve the plugin but are lower priority: `move_document` for archive-entity (move archived docs to an `_archived/` folder), `insert_doc_link` for frontmatter provenance links complementing body wikilinks, `copy_document` for template-based document creation once the template registry exists, `get_plugin_info` for pre-flight registration checks in initialize-plugin.

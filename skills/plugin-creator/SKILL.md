@@ -259,15 +259,17 @@ every other location where a version string appears:
 |----------|-------|--------|
 | `.claude-plugin/plugin.json` | `"version"` | Source of truth — do not change here |
 | `README.md` frontmatter | `version:` | Update to match `plugin.json` |
-| `.claude-plugin/marketplace.json` entry | `"version"` | Update to match `plugin.json` |
+| `flashquery*plugins/.claude-plugin/marketplace.json` entry | `"version"` | Update to match `plugin.json` |
 
 If `README.md` doesn't have a `version` in its frontmatter, add one. If other files
 reference a version string (e.g., a changelog heading, an install command in the docs),
 update those too.
 
+If there is any question about a file location, as the user. The `marketplace.json` normally shouldn't need to be created from scratch; it likely already exists if you cannot find it.
+
 **Step 2 — Update `marketplace.json`**
 
-The manifest is at `<workspace>/flashquery-core/.claude-plugin/marketplace.json`.
+The manifest is at `<workspace>/flashquery*plugins/.claude-plugin/marketplace.json`.
 Add or update the entry for this plugin (match on `name`):
 
 ```json
@@ -280,7 +282,7 @@ Add or update the entry for this plugin (match on `name`):
 ```
 
 The `source` path is relative to the repo root and follows the pattern
-`./flashquery-core/plugins/<plugin-name>`.
+`./flashquery*plugins/<plugin-name>`.
 
 **Step 3 — Verify consistency**
 
@@ -290,7 +292,7 @@ After writing all files, do a quick cross-check:
 PLUGIN_DIR="<output-dir>/<plugin-name>"
 VERSION_PLUGIN=$(python3 -c "import json; print(json.load(open('${PLUGIN_DIR}/.claude-plugin/plugin.json'))['version'])")
 VERSION_README=$(grep -m1 '^version:' "${PLUGIN_DIR}/README.md" | awk '{print $2}')
-VERSION_MARKET=$(python3 -c "import json; d=json.load(open('<workspace>/flashquery-core/.claude-plugin/marketplace.json')); print(next(p['version'] for p in d['plugins'] if p['name']=='<plugin-name>'))")
+VERSION_MARKET=$(python3 -c "import json; d=json.load(open('<workspace>/flashquery*plugins/.claude-plugin/marketplace.json')); print(next(p['version'] for p in d['plugins'] if p['name']=='<plugin-name>'))")
 
 echo "plugin.json:      $VERSION_PLUGIN"
 echo "README.md:        $VERSION_README"
@@ -368,7 +370,7 @@ Before delivering, confirm:
 - [ ] `settings.json` is present only if a default agent is intentionally configured
 - [ ] `README.md` explains what the plugin does and lists components
 - [ ] The `.plugin` zip file opens cleanly (the top-level entry is the plugin folder)
-- [ ] Both the `.plugin` file and the plugin folder are present in `flashquery-core/flashquery-core/plugins/`
+- [ ] Both the `.plugin` file and the plugin folder are present in `flashquery*plugins/plugins/`
 - [ ] Version is consistent across `plugin.json`, `README.md` frontmatter, and `marketplace.json` (verified programmatically in Phase 6)
 - [ ] `marketplace.json` entry has correct `name`, `description`, `version`, and `source` path
 

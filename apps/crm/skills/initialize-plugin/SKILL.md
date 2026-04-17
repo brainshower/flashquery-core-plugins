@@ -59,7 +59,33 @@ Once the user chooses, save the configuration as a memory so all CRM skills know
 - `plugin_scope`: `"crm"`
 - `tags`: `["crm-config", "vault-folders"]`
 
-### 3. Configure plugin instance (optional)
+### 3. Re-register schema with folder claims
+
+Now that you know the user's folder structure, re-read `references/schema.yaml` and append the appropriate folder entries to the `documents.types` list before re-registering.
+
+**For Option A (single folder)**, append:
+```yaml
+    - name: crm-documents
+      folder: CRM
+      description: "All CRM contact and company documents"
+```
+(Using the actual folder path the user specified, without trailing slash.)
+
+**For Option B (separate folders)**, append:
+```yaml
+    - name: crm-contacts
+      folder: CRM/Contacts
+      description: "Contact profile documents"
+    - name: crm-companies
+      folder: CRM/Companies
+      description: "Company profile documents"
+```
+
+Call `register_plugin` again with the updated `schema_yaml`. Same-version re-registration is safe — it updates the folder claims without re-executing table DDL.
+
+This step is essential: without folder claims, the discovery orchestrator cannot route documents in these folders to the CRM plugin, and callbacks will not fire for CRM-owned documents.
+
+### 4. Configure plugin instance (optional)
 
 If the user wants CRM tables to live under a specific instance name (e.g., "work" or "personal"), ask them now. Save the instance name in a memory so all CRM skills can pass it consistently:
 
@@ -69,7 +95,7 @@ If the user wants CRM tables to live under a specific instance name (e.g., "work
 
 If no instance name was specified, use "default" — skills omit `plugin_instance` in that case and the system defaults automatically.
 
-### 4. Confirm setup
+### 5. Confirm setup
 
 Tell the user:
 - Which database tables were created

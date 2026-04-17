@@ -124,6 +124,43 @@ tables:
         description: "Comma-separated tags for pipeline stage (#stage/proposal), value tier (#value/high), deal type, etc."
 
 # ============================================================
+# Document Types (Folder Claims)
+# ============================================================
+# The AI populates this section dynamically during Init based
+# on the user's vault folder configuration choice. If the user
+# chose a single folder (e.g., CRM/), one entry is added. If
+# they chose separate folders (e.g., CRM/Contacts/ and
+# CRM/Companies/), two entries are added. The _plugin/ entries
+# are always present.
+#
+# IMPORTANT: During Init, re-read this schema, append the
+# user's folder entries to the documents.types list, and call
+# register_plugin with the updated schema. Same-version
+# re-registration is safe.
+# ============================================================
+
+documents:
+  types:
+    - name: templates
+      folder: _plugin/templates
+      description: "Base and user-defined document templates"
+    - name: feedback
+      folder: _plugin/feedback
+      description: "Plugin self-improvement notes"
+    # User folder entries are appended here during Init.
+    # Single folder example:
+    #   - name: crm-documents
+    #     folder: CRM
+    #     description: "All CRM contact and company documents"
+    # Separate folders example:
+    #   - name: crm-contacts
+    #     folder: CRM/Contacts
+    #     description: "Contact profile documents"
+    #   - name: crm-companies
+    #     folder: CRM/Companies
+    #     description: "Company profile documents"
+
+# ============================================================
 # Memory Configuration
 # ============================================================
 # Memories are the AI-only layer: impressions, preferences, and

@@ -38,7 +38,7 @@ At minimum:
 
 ## Tag reference
 
-Before applying tags, consult `references/tags.md` in this plugin for the native CRM tag vocabulary. That file defines which tags exist, when to apply them, and what user language maps to each tag. It also explains how to handle user-defined tags that fall outside the native taxonomy.
+Before applying tags, read the tag vocabulary at runtime by calling `get_document` with the path to `references/tags.md` (relative to the plugin root — two levels up from this SKILL.md). This ensures you're using the current vocabulary, including any user-defined tags added since the plugin was installed. The file defines which tags exist, when to apply them, and what user language maps to each tag. It also explains how to handle user-defined tags that fall outside the native taxonomy.
 
 ## Operations
 

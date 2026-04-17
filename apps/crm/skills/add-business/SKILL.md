@@ -37,7 +37,16 @@ Before creating anything, call `search_memory` with `query: "crm_config vault fo
 
 If no configuration is found, ask the user where company documents should be stored and save the preference using the `crm-memory` skill's pattern (with `[crm_config]` prefix and `crm-config` tag).
 
-### 1. Create the vault document (document-first)
+### 1. Check for duplicates
+
+Before creating anything, call `search_records` with:
+- `plugin_id`: `"crm"`
+- `table`: `"businesses"`
+- `query`: `"<business name>"`
+
+If a matching business is found, tell the user: "A business named [Name] already exists. Would you like to update the existing record instead?" If they confirm, hand off to `update-entity`. If they want to proceed anyway (e.g., a subsidiary with a similar name), continue to step 2.
+
+### 2. Create the vault document (document-first)
 
 Call `create_document` with:
 - `title`: the business name
@@ -68,7 +77,7 @@ Call `create_document` with:
 
 - Industry tag if applicable (e.g., `#industry/energy`, `#industry/saas`, `#industry/healthcare`).  Do not include status tags — those are managed by the system.
 
-### 2. Parse the fqc_id from the response
+### 3. Parse the fqc_id from the response
 
 The `create_document` response contains a line like:
 ```
@@ -77,7 +86,7 @@ fqc_id: 550e8400-e29b-41d4-a716-446655440000
 
 Extract that UUID — you will need it in the next step.
 
-### 3. Create the database record
+### 4. Create the database record
 
 Call `create_record` with:
 - `plugin_id`: `"crm"`
@@ -86,13 +95,13 @@ Call `create_record` with:
   ```json
   {
     "name": "<business name>",
-    "fqc_id": "<the UUID you parsed from step 2>",
+    "fqc_id": "<the UUID you parsed from step 3>",
     "tags": "<comma-separated tags, e.g. '#industry/energy'>"
   }
   ```
 - `plugin_instance`: pass through if the user's CRM is using a non-default instance name
 
-### 4. Report the result
+### 5. Report the result
 
 Tell the user:
 - The business was created

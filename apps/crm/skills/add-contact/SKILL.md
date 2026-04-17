@@ -37,7 +37,16 @@ Before creating anything, call `search_memory` with `query: "crm_config vault fo
 
 If no configuration is found, ask the user where contact documents should be stored and save the preference using the `crm-memory` skill's pattern (with `[crm_config]` prefix and `crm-config` tag).
 
-### 1. Create the vault document (document-first)
+### 1. Check for duplicates
+
+Before creating anything, call `search_records` with:
+- `plugin_id`: `"crm"`
+- `table`: `"contacts"`
+- `query`: `"<contact's full name>"`
+
+If a matching contact is found, tell the user: "A contact named [Name] already exists. Would you like to update the existing contact instead?" If they confirm, hand off to `update-entity`. If they want to proceed anyway (e.g., two different people with the same name), continue to step 2.
+
+### 2. Create the vault document (document-first)
 
 Call `create_document` with:
 - `title`: the contact's full name
@@ -71,16 +80,16 @@ Call `create_document` with:
 
 - `tags`: any relevant tags for categorization (e.g., `#stage/qualified`, `#relationship/warm`). Do not include status tags — those are managed by the system.
 
-### 2. Parse the fqc_id from the response
+### 3. Parse the fqc_id from the response
 
 The `create_document` response contains a line like:
 ```
 fqc_id: 550e8400-e29b-41d4-a716-446655440000
 ```
 
-Extract that UUID — you will need it in the next step. This is the stable identifier that links the vault document to the database record.
+Extract that UUID — you will need it in step 4. This is the stable identifier that links the vault document to the database record.
 
-### 3. Create the database record
+### 4. Create the database record
 
 Call `create_record` with:
 - `plugin_id`: `"crm"`
@@ -89,20 +98,20 @@ Call `create_record` with:
   ```json
   {
     "name": "<contact's full name>",
-    "fqc_id": "<the UUID you parsed from step 2>",
+    "fqc_id": "<the UUID you parsed from step 3>",
     "tags": "<comma-separated tags if any, e.g. '#stage/qualified,#relationship/warm'>"
   }
   ```
 - `plugin_instance`: pass through if the user's CRM is using a non-default instance name
 
-### 4. Link to a business (if a company was mentioned)
+### 5. Link to a business (if a company was mentioned)
 
 If the user mentioned a company the contact works at:
 
 a. Call `search_records` with `plugin_id: "crm"`, `table: "businesses"`, and `filters: { name: "<business name>" }` to find the business record.
 
 b. If the business is found, add a bidirectional wikilink between the two documents:
-   - Call `insert_in_doc` on the **contact's vault document** (the fqc_id from step 2) with:
+   - Call `insert_in_doc` on the **contact's vault document** (the fqc_id from step 3) with:
      - `identifier`: the contact's fqc_id
      - `content`: `"[[Business Name]]"`
      - `heading`: `"Relationship Context"`
@@ -115,7 +124,7 @@ b. If the business is found, add a bidirectional wikilink between the two docume
 
 c. If the business is not found, note this in your response — the user may want to add the business first using the `add_business` skill, then re-link.
 
-### 5. Report the result
+### 6. Report the result
 
 Tell the user:
 - The contact was created

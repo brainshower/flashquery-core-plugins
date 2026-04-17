@@ -1,0 +1,225 @@
+# ============================================================
+# Product Brain Plugin — Schema Definition
+# ============================================================
+# A product knowledge management system built on FlashQuery Core.
+# Captures fragments, research, feature specs, and work items
+# in a structured vault with AI-assisted organization.
+#
+# This file defines the five database tables created during
+# plugin initialization. The AI constructs and extends this
+# schema dynamically during Init and Add Project — project
+# folder entries are appended to documents.types as projects
+# are created.
+#
+# Tables, document types, and memory configuration are defined
+# here. Run "Initialize Product Brain" to create the
+# infrastructure.
+# ============================================================
+
+id: product-brain
+name: Product Brain
+version: "0.1.0"
+description: >
+  A product knowledge management plugin — capture, organize,
+  and synthesize product intelligence through conversation.
+  Tracks sparks, research notes, feature specs, work items,
+  and daily logs using FlashQuery Core's three-layer storage
+  model (documents + records + memories).
+
+tables:
+  - name: projects
+    description: >
+      One record per project or product initiative. Projects are
+      the top-level organizational unit — all documents belong to
+      a project. The project_path field maps to a folder in the
+      vault and is used by document routing to assign incoming
+      files to the correct project.
+    embed_fields:
+      - name
+    columns:
+      - name: name
+        type: text
+        required: true
+        description: "Display name of the project (e.g., 'FlashQuery Core')"
+      - name: project_path
+        type: text
+        required: true
+        description: "Vault folder path this project owns (e.g., 'flashquery/'). Used to route incoming documents to the correct project."
+      - name: status
+        type: text
+        required: true
+        description: "Project lifecycle status: active or archived"
+      - name: tags
+        type: text
+        description: "Comma-separated tags for filtering (e.g., '#active,#priority')"
+      - name: description
+        type: text
+        description: "Optional description of the project's scope and purpose"
+      - name: created_at
+        type: timestamptz
+        description: "When the project was created"
+
+  - name: documents
+    description: >
+      One record per vault document owned by the plugin. This is
+      the primary index for querying documents by project, type,
+      and status without reading vault files. The fqc_id links to
+      the actual vault document managed by FQC's core document
+      system.
+    embed_fields:
+      - document_type
+      - tags
+    columns:
+      - name: fqc_id
+        type: uuid
+        required: true
+        description: "UUID linking to the vault document in fqc_documents — the stable identifier even if the file moves"
+      - name: project_id
+        type: uuid
+        required: true
+        description: "UUID of the owning project in prodbrain_projects"
+      - name: document_type
+        type: text
+        required: true
+        description: "Content type: spark, research_note, feature_spec, work_item, or daily_log"
+      - name: status
+        type: text
+        required: true
+        description: "Lifecycle status: active, resolved, archived, or shipped"
+      - name: tags
+        type: text
+        description: "Comma-separated tags for filtering (e.g., '#priority,#user-feedback')"
+      - name: has_open_questions
+        type: boolean
+        description: "True when a research note contains unresolved open questions. Enables the Review Loop to find actionable research notes via search_records without reading document content."
+      - name: created_at
+        type: timestamptz
+        description: "When the document record was created"
+      - name: updated_at
+        type: timestamptz
+        description: "When the document record was last updated — reflects the vault file's modified_at timestamp"
+
+  - name: templates
+    description: >
+      The template registry. One record per template file in the
+      vault. Skills look up template content from the registry at
+      runtime rather than hardcoding paths. Both base templates
+      (shipped with the plugin) and user-defined templates are
+      tracked here.
+    embed_fields:
+      - name
+    columns:
+      - name: fqc_id
+        type: uuid
+        required: true
+        description: "UUID of the template document in the vault — the stable identifier even if the file moves"
+      - name: name
+        type: text
+        required: true
+        description: "Display name of the template (e.g., 'Spark', 'Research Note')"
+      - name: document_type
+        type: text
+        required: true
+        description: "The document type this template produces: spark, research_note, feature_spec, work_item, daily_log, or custom"
+      - name: is_base
+        type: boolean
+        required: true
+        description: "True if shipped with the plugin, false if user-defined"
+      - name: plugin_version
+        type: text
+        description: "Version of the plugin that wrote this template — used to detect when an updated base template is available"
+      - name: created_at
+        type: timestamptz
+        description: "When the template was registered"
+
+  - name: provenance
+    description: >
+      Directed relationships between documents, recording the
+      lineage chain as content moves through the pipeline. One
+      row per source-to-derived relationship. Enables traversal
+      in both directions: 'what did this spark contribute to?'
+      and 'what sources informed this feature spec?' Provenance
+      lives in the database rather than document frontmatter
+      because future FQC document types (PDFs, images) will not
+      have frontmatter.
+    columns:
+      - name: source_fqc_id
+        type: uuid
+        required: true
+        description: "UUID of the document that contributed (the origin)"
+      - name: derived_fqc_id
+        type: uuid
+        required: true
+        description: "UUID of the document that was informed or created from the source"
+      - name: created_at
+        type: timestamptz
+        description: "When the provenance relationship was established"
+
+  - name: review_state
+    description: >
+      Tracks Review Loop execution so each run knows where it
+      left off and does not reprocess everything from scratch.
+      One record per project scope (or one global record with
+      null project_id for all-project runs).
+    columns:
+      - name: project_id
+        type: uuid
+        description: "UUID of the project this state applies to, or null for all-project runs"
+      - name: last_run_at
+        type: timestamptz
+        description: "Timestamp of the most recent Review Loop run"
+      - name: last_processed_at
+        type: timestamptz
+        description: "Timestamp of the most recently processed document in that run"
+
+# ============================================================
+# Document Types (Folder Claims)
+# ============================================================
+# The AI constructs this section dynamically during Init and
+# Add Project. Base entries for _plugin/ folders are always
+# present. Project folder entries are appended as projects are
+# created.
+#
+# IMPORTANT: When adding a new project via Add Project, re-read
+# this schema, append the new project's folder entries to the
+# documents.types list, and call register_plugin again with the
+# updated schema. Same-version re-registration is safe.
+# ============================================================
+
+documents:
+  types:
+    - name: templates
+      folder: _plugin/templates
+      description: "Base and user-defined document templates"
+    - name: feedback
+      folder: _plugin/feedback
+      description: "Plugin self-improvement notes"
+    # Project folder entries are appended here during Init and
+    # Add Project. Each project adds entries like:
+    #   - name: {project}-inbox
+    #     folder: {project}/inbox
+    #   - name: {project}-research
+    #     folder: {project}/research
+    #   - name: {project}-specs
+    #     folder: {project}/specs
+    #   - name: {project}-work
+    #     folder: {project}/work
+
+# ============================================================
+# Memory Configuration
+# ============================================================
+
+memory:
+  scope: plugin
+  categories:
+    - name: plugin_config
+      description: >
+        Plugin configuration preferences — vault location,
+        active project, display preferences, Orient/Close
+        customizations stated by the user during use.
+    - name: product_context
+      description: >
+        Ambient product intelligence that surfaces during
+        conversations — strategic observations, recurring
+        themes, user priorities that inform how skills
+        behave but don't belong in a formal document.

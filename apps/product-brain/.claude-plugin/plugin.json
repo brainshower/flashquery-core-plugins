@@ -1,0 +1,17 @@
+{
+  "name": "product-brain",
+  "version": "0.1.0",
+  "description": "A product knowledge management plugin — capture, organize, and synthesize product intelligence through conversation.",
+  "author": {
+    "name": "FlashQuery",
+    "email": "matt@flashquery.ai"
+  },
+  "keywords": [
+    "product-management",
+    "knowledge-management",
+    "flashquery",
+    "vault",
+    "research",
+    "specs"
+  ]
+}

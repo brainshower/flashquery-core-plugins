@@ -19,6 +19,12 @@
       "version": "1.0.0",
       "description": "Core FlashQuery skills for writing, finding, and organizing vault documents and memories, plus vault maintenance commands.",
       "source": "./core/fqc-base"
+    },
+    {
+      "name": "product-brain",
+      "description": "A product knowledge management plugin — capture, organize, and synthesize product intelligence through conversation.",
+      "version": "0.1.0",
+      "source": "./apps/product-brain"
     }
   ]
 }

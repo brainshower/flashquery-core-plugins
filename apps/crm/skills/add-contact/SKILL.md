@@ -41,7 +41,7 @@ If no configuration is found, ask the user where contact documents should be sto
 
 Call `create_document` with:
 - `title`: the contact's full name
-- `path`: the vault folder path from step 0 (e.g., `CRM/` or `CRM/Contacts/`)
+- `path`: the full file path including the filename with `.md` extension (e.g., `CRM/Sarah Chen.md` or `CRM/Contacts/Sarah Chen.md`). Combine the vault folder from step 0 with the contact's name. Do **not** pass a directory path — `create_document` requires a complete file path.
 - `content`: a populated version of the contact note template. Structure the body as follows:
 
   ```markdown
@@ -101,9 +101,17 @@ If the user mentioned a company the contact works at:
 
 a. Call `search_records` with `plugin_id: "crm"`, `table: "businesses"`, and `filters: { name: "<business name>" }` to find the business record.
 
-b. If the business is found, add a bidirectional link between the two documents:
-   - Call `insert_doc_link` on the **contact's vault document** (the path returned in step 1) to add `[[Business Name]]` in the Relationship Context section.
-   - Call `insert_doc_link` on the **business's vault document** (use `search_documents` with the business name to find its path) to add `[[Contact Name]]` in the Key Contacts section.
+b. If the business is found, add a bidirectional wikilink between the two documents:
+   - Call `insert_in_doc` on the **contact's vault document** (the fqc_id from step 2) with:
+     - `identifier`: the contact's fqc_id
+     - `content`: `"[[Business Name]]"`
+     - `heading`: `"Relationship Context"`
+     - `position`: `"end_of_section"`
+   - Call `insert_in_doc` on the **business's vault document** (use `search_records` on `"businesses"` to get its fqc_id) with:
+     - `identifier`: the business's fqc_id
+     - `content`: `"[[Contact Name]]"`
+     - `heading`: `"Key Contacts"`
+     - `position`: `"end_of_section"`
 
 c. If the business is not found, note this in your response — the user may want to add the business first using the `add_business` skill, then re-link.
 
@@ -119,4 +127,4 @@ Tell the user:
 
 - The link pattern (`[[Name]]`) is how contacts and businesses are associated. Do not use tags or a "company" column for this — wikilinks in the vault document are the authoritative relationship.
 - The vault document is the primary source of truth. The database record exists for structured queries ("find everyone in the energy industry") — not for storing contact details.
-- If you need to find the business vault document path for `insert_doc_link`, call `search_documents` with the business name as the query.
+- If you need to find the business vault document for `insert_in_doc`, call `search_records` with `plugin_id: "crm"`, `table: "businesses"` to get the fqc_id, which can be used as the `identifier`.

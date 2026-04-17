@@ -42,7 +42,7 @@ When the user asks about a specific person or company:
 
 1. **Find the entity**: Call `search_records` on `"contacts"` or `"businesses"` table with `filters: { name: "<name>" }`. Get the record ID and fqc_id.
 
-2. **Read the full vault document**: Call `get_document` with the entity's vault path. This contains the full narrative: contact information, relationship context, communication preferences, opportunities, next steps, and interaction history. Use `search_documents` to find the path if you don't have it.
+2. **Read the full vault document**: Call `get_document` with the entity's vault path. This contains the full narrative: contact information, relationship context, communication preferences, opportunities, next steps, and interaction history. Use `search_documents` with `mode: "semantic"` and the entity name as the `query` to find the path if you don't have it.
 
 3. **Discover relationships**: Call `get_doc_outline` on the vault document. This returns all outbound links without reading the full body — use it to find connected entities (contacts linked to a company, companies a contact works with).
 
@@ -88,4 +88,4 @@ Always check whether the user has stored preferences about how they want CRM int
 - This is the "intelligence synthesis" skill — it pulls from all three layers and makes judgment calls about what's most relevant. Don't just dump raw data; interpret and prioritize based on what the user asked for.
 - For "what do I know about X?" queries, start with the vault document (read it fully), then enrich with memories. The vault document is the primary source of truth for facts; memories add impressions and context.
 - `get_doc_outline` is efficient for relationship discovery — it returns links without reading the full body. Use it to discover connected entities, then fetch full documents only for the ones most relevant to the query.
-- `get_briefing` gives a broad project-level snapshot — useful for pipeline and follow-up queries where you need to survey the whole CRM rather than drill into a specific entity.
+- `get_briefing` gives a broad snapshot across tagged documents — useful for pipeline and follow-up queries. It requires a `tags` array (e.g., `tags: ["#stage/proposal", "#stage/negotiation"]`) and optionally accepts `plugin_id: "crm"` and `tag_match: "any"`. Use it when you need to survey documents across multiple pipeline stages rather than drilling into a specific entity.

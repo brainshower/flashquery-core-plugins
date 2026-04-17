@@ -20,7 +20,7 @@ Use this skill when setting up the CRM plugin for the first time, or when settin
 
 ### 1. Register the schema
 
-Read the schema file from the plugin's shared references directory. The schema is located at `references/schema.yaml` at the plugin root (two levels up from this SKILL.md file — e.g., `fqc-crm/references/schema.yaml`). Read the full file content as a string.
+Read the schema file from the plugin's shared references directory. The schema is located at `references/schema.yaml` at the plugin root (two levels up from this SKILL.md file — e.g., `crm/references/schema.yaml`). Read the full file content as a string.
 
 Call `register_plugin` with:
 - `schema_yaml`: the full content of the `schema.yaml` file you just read

@@ -92,8 +92,9 @@ When information changes or a memory needs correction:
 3. Call `update_memory` with:
    - `memory_id`: the memory ID from the search result
    - `content`: the updated content (prefix with category as before)
-   - `plugin_scope`: `"crm"`
    - `tags`: updated tags if relevant
+
+   Note: `update_memory` does not accept `plugin_scope` — the scope is inherited from the original memory. Only `save_memory` takes `plugin_scope` when creating new memories.
 
 The update uses insert-only versioning — the old memory is preserved in the version chain and the new content becomes the current version. You do not need to delete the old memory.
 

@@ -14,7 +14,7 @@ updated: "{{updated}}"
 
 # Relationship Context
 
-<!-- Describe how you know this person, the nature of the relationship, and any relevant background. Include [[wikilinks]] to associated companies or contacts (e.g. [[Acme Corp]], [[Jane Doe]]). Use insert_doc_link to add wikilinks programmatically when creating or updating associations. -->
+<!-- Describe how you know this person, the nature of the relationship, and any relevant background. Include [[wikilinks]] to associated companies or contacts (e.g. [[Acme Corp]], [[Jane Doe]]). The add_contact skill uses insert_in_doc to add wikilinks programmatically when creating or updating associations. -->
 
 # Communication
 
@@ -30,7 +30,7 @@ updated: "{{updated}}"
 
 # Interaction Timeline
 
-<!-- Chronological record of all interactions. Entries are appended here via append_to_doc (log_interaction skill). Each entry follows this format:
+<!-- Chronological record of all interactions. Entries are appended here via insert_in_doc (log_interaction skill). Each entry follows this format:
 
 ## YYYY-MM-DD
 **Type:** meeting / call / email / message

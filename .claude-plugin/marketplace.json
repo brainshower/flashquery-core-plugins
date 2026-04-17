@@ -9,10 +9,10 @@
   },
   "plugins": [
     {
-      "name": "fqc-crm",
-      "description": "A CRM powered by FlashQuery Core contact management through conversation, not application.",
+      "name": "crm",
+      "description": "A CRM powered by FlashQuery Core — contact management through conversation, not application.",
       "version": "1.5.0",
-      "source": "./apps/fqc-crm"
+      "source": "./apps/crm"
     },
     {
       "name": "fqc-base",

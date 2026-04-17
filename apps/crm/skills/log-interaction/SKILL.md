@@ -72,10 +72,12 @@ Call `create_record` with:
 
 ### 4. Append to the contact's vault document
 
-Find the contact's vault document. Use `search_documents` with the contact's name as the query to find the document path, or derive it from the contact's project and name.
+Use the contact's **fqc_id** from step 1 to identify their vault document.
 
-Call `append_to_doc` with:
-- `identifier`: the contact's document path (or fqc_id)
+Call `insert_in_doc` with:
+- `identifier`: the contact's fqc_id
+- `heading`: `"Interaction Timeline"`
+- `position`: `"end_of_section"`
 - `content`: a formatted interaction entry:
 
   ```markdown
@@ -97,7 +99,22 @@ Call `update_record` with:
 
 This enables queries like "who haven't I spoken to recently?" — the `last_interaction` field is what makes date-arithmetic queries possible.
 
-### 6. Report the result
+### 6. Update Next Steps (if action items were provided)
+
+If the user provided action items or follow-ups as part of this interaction, update the contact's Next Steps section to reflect them. This replaces stale next steps with the current ones from this interaction.
+
+Call `replace_doc_section` with:
+- `identifier`: the contact's fqc_id
+- `heading`: `"Next Steps"`
+- `content`: the action items formatted as a list, with dates where relevant:
+  ```markdown
+  - YYYY-MM-DD — Follow up on proposal
+  - YYYY-MM-DD — Send case study examples
+  ```
+
+Only do this if the user explicitly provided action items. If the interaction had no follow-ups, leave the Next Steps section as-is.
+
+### 7. Report the result
 
 Tell the user:
 - The interaction was logged for [Contact Name] on [Date]
@@ -110,5 +127,5 @@ Tell the user:
 - The Interaction Timeline in the vault document is the human-readable history — this is what appears when the user reads the contact's document in Obsidian.
 - The interaction record in the database enables structured queries ("all meetings this month", "all interactions with Acme Corp") — it does not store the summary or narrative content.
 - The `last_interaction` date on the contact record is specifically for follow-up queries. Always update it after logging any interaction.
-- `append_to_doc` always adds to the end of the document, so the Interaction Timeline is chronological — oldest entries first, newest at the bottom. This is fine and expected. Do not attempt to insert entries out of order.
+- `insert_in_doc` with `position: "end_of_section"` and `heading: "Interaction Timeline"` appends within that section, so the timeline stays chronological — oldest entries first, newest at the bottom. This is fine and expected. Do not attempt to insert entries out of order.
 - If the user's interaction description contains an opportunity signal (e.g., "she mentioned they're budgeting for a rebrand", "they want us to pitch"), note this in the interaction summary and ask: "It sounds like there may be an opportunity here — would you like me to track it as a deal?" If they confirm, hand off to the `add-opportunity` skill.

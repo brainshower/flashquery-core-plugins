@@ -101,20 +101,20 @@ The opportunity narrative should be added to the relevant vault document(s) — 
 
 **If a company was linked:**
 
-Find the company's vault document. Call `search_documents` with the company name as the query to find the document path.
+Find the company's vault document. Call `search_records` with `plugin_id: "crm"`, `table: "businesses"`, `filters: { "name": "<company name>" }` to get the business record and its `fqc_id`.
 
-Call `append_to_doc` with:
-- `identifier`: the company document path (or fqc_id)
-- `content`: a brief narrative entry formatted to slot into the Opportunities section:
+Call `insert_in_doc` with:
+- `identifier`: the company's fqc_id
+- `heading`: `"Opportunities"`
+- `position`: `"end_of_section"`
+- `content`: a brief narrative entry:
   ```markdown
   **{Opportunity Name}** — {brief description of the opportunity, stage, timeline, any context the user provided}
   ```
 
-Note: `append_to_doc` always appends to the end of the document. If the Opportunities section isn't the last section, the user can move the entry in Obsidian. Alternatively, read the document with `get_document`, insert the entry at the right place, and use `update_document` to write the full updated content.
-
 **If a contact was linked (and the contact is the primary relationship):**
 
-Find the contact's vault document similarly. Add a brief note to their Opportunities section referencing the deal and company.
+Find the contact's vault document similarly (use the contact's fqc_id from step 1). Call `insert_in_doc` with `heading: "Opportunities"`, `position: "end_of_section"`, and a brief note referencing the deal and company.
 
 ### 6. Report the result
 

@@ -72,7 +72,7 @@ tables:
     description: >
       Interaction records for structured date and relationship queries.
       The full interaction narrative is appended to the contact's vault
-      document Interaction Timeline section via append_to_doc. The record
+      document Interaction Timeline section via insert_in_doc. The record
       enables 'all interactions with Sarah', 'interactions this month',
       and interaction-type filtering via tags.
     columns:

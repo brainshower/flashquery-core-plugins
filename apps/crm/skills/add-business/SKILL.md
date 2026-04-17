@@ -41,7 +41,7 @@ If no configuration is found, ask the user where company documents should be sto
 
 Call `create_document` with:
 - `title`: the business name
-- `path`: the vault folder path from step 0 (e.g., `CRM/` or `CRM/Companies/`)
+- `path`: the full file path including the filename with `.md` extension (e.g., `CRM/Acme Corp.md` or `CRM/Companies/Acme Corp.md`). Combine the vault folder from step 0 with the business name. Do **not** pass a directory path — `create_document` requires a complete file path.
 - `content`: a populated version of the company profile template. Structure the body as follows:
 
   ```markdown

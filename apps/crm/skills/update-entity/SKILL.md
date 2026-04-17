@@ -3,19 +3,20 @@ name: update-entity
 description: >
   Use this skill when the user asks to change, update, or modify something
   about an existing CRM contact, company, or opportunity — tags, pipeline
-  stage, relationship type, name, or status. Trigger on "mark Sarah as VIP",
-  "move Acme to proposal stage", "they're a client now", "move the deal to
-  negotiation", "update the opportunity stage", "she changed her name",
-  "they rebranded", "tag this as high priority", "remove the prospect tag",
-  or any instruction to add, change, or remove a tag on a CRM entity. This
-  is for modifying existing entities — not for creating new ones (use
-  add-contact, add-business, or add-opportunity) or for logging interactions
-  (use log-interaction).
+  stage, relationship type, name, status, or document section content.
+  Trigger on "mark Sarah as VIP", "move Acme to proposal stage", "they're
+  a client now", "move the deal to negotiation", "update the opportunity
+  stage", "she changed her name", "they rebranded", "tag this as high
+  priority", "remove the prospect tag", "update Sarah's Next Steps",
+  "rewrite the notes for Acme", or any instruction to modify an existing
+  CRM entity. This is for modifying existing entities — not for creating
+  new ones (use add-contact, add-business, or add-opportunity) or for
+  logging interactions (use log-interaction).
 ---
 
 # Update Entity
 
-Updates an existing contact or company in the CRM. This is the skill that handles all modifications to existing entities — primarily tag changes (pipeline stage, relationship type, industry, custom tags) and occasionally title changes (name corrections, company rebrands).
+Updates an existing contact or company in the CRM. This is the skill that handles all modifications to existing entities — tag changes (pipeline stage, relationship type, industry, custom tags), title changes (name corrections, company rebrands), and document section updates (rewriting Next Steps, Relationship Context, or any other named section).
 
 This skill exists because `add-contact` and `add-business` are creation-only — they have no update path. Without this skill, there is no way to change tags or frontmatter on an existing entity.
 
@@ -41,7 +42,7 @@ Before applying tags, consult `references/tags.md` in this plugin for the native
 
 ## Operations
 
-This skill supports three types of updates. A single user request may involve more than one — for example, "they're a client now, and they rebranded to Nova Labs" involves both a tag change and a title change.
+This skill supports four types of updates. A single user request may involve more than one — for example, "they're a client now, and they rebranded to Nova Labs" involves both a tag change and a title change.
 
 ### Operation 1: Apply or remove tags
 
@@ -126,7 +127,7 @@ Call `update_record` with:
 
 This is the tricky part. Other documents may reference this entity via `[[Old Name]]` links. Search for documents containing the old name:
 
-Call `search_documents` with the old name as the query.
+Call `search_documents` with the old name as the `query` and `mode: "semantic"`.
 
 For each document that contains a `[[Old Name]]` link, call `get_document` to read it, then call `update_document` to replace `[[Old Name]]` with `[[New Name]]` in the body.
 
@@ -137,7 +138,44 @@ Tell the user:
 - Which related documents had their links updated
 - Remind the user that if they have the document open in Obsidian, they should refresh to see the title change
 
-### Operation 3: Bulk tag update
+### Operation 3: Update a document section
+
+Used when the user wants to rewrite or replace the content of a specific section in a contact or company document — for example, "update Sarah's Next Steps" or "rewrite the notes for Acme Corp."
+
+#### Steps
+
+**1. Find the entity** (same as Operation 1, step 1)
+
+From the result, note the **fqc_id**. This operation only applies to contacts and businesses (which have vault documents), not opportunities.
+
+**2. Confirm the section and new content**
+
+Identify which section the user wants to update. The standard sections are:
+
+- **Contact documents**: Contact Information, Relationship Context, Communication, Opportunities, Next Steps, Interaction Timeline
+- **Company documents**: Company Information, What They Do, Key Contacts, Opportunities, Notes
+
+If the user provided the new content, use it. If they described what they want changed but didn't provide exact text, draft the section content and confirm with them before writing.
+
+**3. Replace the section**
+
+Call `replace_doc_section` with:
+- `identifier`: the entity's fqc_id
+- `heading`: the section heading (e.g., `"Next Steps"`)
+- `content`: the new section content (everything below the heading, not including the heading itself)
+
+This surgically replaces only the target section, leaving the rest of the document untouched.
+
+**4. Report the result**
+
+Tell the user which section was updated and on which entity's document.
+
+#### When NOT to use this operation
+
+- Do not use `replace_doc_section` for the **Interaction Timeline** section — that section is append-only via `insert_in_doc` (log-interaction skill). Replacing it would destroy history.
+- Do not use it for tag or title changes — those have their own operations above with proper cross-layer sync.
+
+### Operation 4: Bulk tag update
 
 When a deal closes or a relationship shifts, the user may want to update multiple related entities at once. For example, "Acme is now a client" could mean updating the company AND all contacts associated with it.
 
@@ -159,5 +197,6 @@ Only propagate if the user confirms. Pipeline stages on contacts may differ from
 
 - Tag changes are the primary use case for this skill. The `apply_tags` tool is the right mechanism because it syncs document frontmatter and Supabase atomically.
 - `update_doc_header` is used only for the rarer title/name change case. Do not use it for tag changes — `apply_tags` handles those.
+- `replace_doc_section` is the right tool when the user wants to rewrite a specific named section. It's surgical — only the target section is replaced, so there's no risk of accidentally modifying other sections. Never use it on the Interaction Timeline (append-only).
 - Always check the current tags before applying changes, especially for pipeline stages where only one `#stage/` tag should be active.
 - When a tag doesn't match the native taxonomy in `references/tags.md`, apply it anyway (tags belong to the user — P-02) and save a preference memory so future skills recognize it.
